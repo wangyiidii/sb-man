@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -47,12 +48,27 @@ public class ThreadPoolConfig {
     private static final String SCHEDULED_EXECUTOR_NAME_PREFIX = "Async-scheduledExecutor-%s";
     private static final String ASYNC_EXECUTOR_NAME_PREFIX = "Async-Executor-%s";
 
+    /**
+     * 解决定时任务和websocket同时使用报错问题
+     *
+     * @return TaskScheduler
+     */
     @Bean
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(10);
         taskScheduler.initialize();
         return taskScheduler;
+    }
+
+    /**
+     * 使@Scheduled的cron支持配置
+     *
+     * @return PropertySourcesPlaceholderConfigurer
+     */
+    @Bean
+    public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
     }
 
     /**

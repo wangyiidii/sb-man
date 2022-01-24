@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -234,8 +235,7 @@ public class RobotCacheService {
     }
 
     @Async("scheduledExecutor")
-//    @Scheduled(cron = "0/20 * * * * ?")
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0/20 * * * * ?")
     public void timerPersistCacheData() {
         if (!INIT) {
             return;
@@ -245,17 +245,19 @@ public class RobotCacheService {
     }
 
     @Async("scheduledExecutor")
-    @Scheduled(cron = "0/20 * * * * ?")
-//    @Scheduled(cron = "0 0/3 * * * ?")
+    @Scheduled(cron = "${sb.config.monitor-cron:0 0/3 * * * ?}")
     public void timerMonitor() {
         if (!INIT) {
             return;
         }
         ThreadPoolTaskExecutor executor = SpringContextHolder.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
-        DATA_CACHE.values().forEach(robotCache -> robotCache.getQqCacheMap().values().forEach(qqCache -> {
-            // 每个qq起一个线程
-            executor.submit(() -> this.monitor(qqCache, false));
-        }));
+        List<QqCache> qqCaches = DATA_CACHE.values().stream()
+                .map(robotCache -> robotCache.getQqCacheMap().values())
+                .flatMap(Collection::stream)
+                .filter(qq -> CollUtil.isNotEmpty(qq.getLtPhoneCache()))
+                .collect(Collectors.toList());
+        log.info("定时监控联通跳点, 本次监控{}个账户", qqCaches.size());
+        qqCaches.forEach(qq -> executor.execute(() -> this.monitor(qq, false)));
     }
 
     private QqCache getQq(Long robotQq, Long friendQq) {

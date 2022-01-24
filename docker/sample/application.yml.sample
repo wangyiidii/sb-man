@@ -1,5 +1,6 @@
 sb:
   config:
+    monitor-cron: '0 0/3 * * * ?'
     robot:
       - name: '机器人'
         qq: 123456
