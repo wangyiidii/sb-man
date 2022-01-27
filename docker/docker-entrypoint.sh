@@ -29,11 +29,13 @@ if [ ! -s ${SB_DIR}/config/config.json ]; then
 fi
 
 echo "======================== 2. 启动gmc ========================\n"
-
-if [ 0"$IS_USE_BUILT_IN_GMC" = "0" ]; then
+if $IS_USE_BUILT_IN_GMC AND [ $IS_USE_BUILT_IN_GMC="true"]; then
+  echo "检测到使用内置的gmc\n"
   chmod +x ${SB_DIR}/gmc/Go-Mirai-Client
-  nohup ${SB_DIR}/gmc/Go-Mirai-Client > /dev/null 2 >&1 &
+  nohup ${SB_DIR}/gmc/Go-Mirai-Client 2 >/dev/null >&1 &
 else
+  echo "检测到不使用内置的gmc\n"
+fi
 
 echo "======================== 3. 启动Server ========================\n"
 java -jar ${SB_DIR}/app.jar

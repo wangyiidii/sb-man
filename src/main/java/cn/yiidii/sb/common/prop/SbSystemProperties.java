@@ -9,7 +9,6 @@ import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SbSystemProperties implements InitializingBean {
 
-    public static final String CONFIG_FILE_NAME = "config/config.json";
+    public static final String CONFIG_FILE_PATH = System.getProperty("user.dir") + File.separator + "config" + File.separator + "config.json";
 
     private String ltMonitorCron;
     private List<RobotConfig> robot;
@@ -35,31 +34,18 @@ public class SbSystemProperties implements InitializingBean {
     }
 
     public String update(boolean throwException) {
-        ClassPathResource configResource = new ClassPathResource(CONFIG_FILE_NAME);
-        File configJsonFile;
         try {
-            configJsonFile = configResource.getFile();
+            String configStr = FileUtil.readUtf8String(CONFIG_FILE_PATH);
+            JSONObject configJo = JSONObject.parseObject(configStr);
+            BeanUtil.copyProperties(configJo, this);
+            return configJo.toJSONString();
         } catch (Exception e) {
             if (throwException) {
-                throw new IllegalArgumentException(StrUtil.format("{}不存在", CONFIG_FILE_NAME));
+                throw new IllegalArgumentException(StrUtil.format("{}不存在", CONFIG_FILE_PATH));
             }
-            log.error("更新配置文件[{}]发生异常step1, e: {}", CONFIG_FILE_NAME, e.getMessage());
+            log.error("更新配置文件[{}]发生异常, e: {}", CONFIG_FILE_PATH, e.getMessage());
             return null;
         }
-
-        String content = FileUtil.readUtf8String(configJsonFile);
-        JSONObject configJo;
-        try {
-            configJo = JSONObject.parseObject(content);
-        } catch (Exception e) {
-            if (throwException) {
-                throw new IllegalArgumentException(StrUtil.format("config.json.sample 配置格式有误"));
-            }
-            log.error("更新配置文件[{}]发生异常step2, e: {}", CONFIG_FILE_NAME, e.getMessage());
-            return null;
-        }
-        BeanUtil.copyProperties(configJo, this);
-        return configJo.toJSONString();
     }
 
     @Data

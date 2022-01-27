@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 /**
@@ -62,7 +61,7 @@ public class SystemConfigFileListener implements InitializingBean {
             }
         };
         // 延迟处理监听事件
-        WatchMonitor.createAll(new ClassPathResource(SbSystemProperties.CONFIG_FILE_NAME).getURL(), new DelayWatcher(simpleWatcher, 1000)).start();
+        WatchMonitor.createAll(SbSystemProperties.CONFIG_FILE_PATH, new DelayWatcher(simpleWatcher, 1000)).start();
     }
 
 }
