@@ -23,16 +23,19 @@ if [ ! -s ${SB_DIR}/gmc/Go-Mirai-Client ]; then
   cp -fv ${SB_DIR}/sample/Go-Mirai-Client ${SB_DIR}/gmc/Go-Mirai-Client
 fi
 
-if [ ! -s ${SB_DIR}/config/application.yml ]; then
-  echo "检测到config配置目录下不存在application.yml，从示例文件复制一份用于初始化...\n"
-  cp -fv ${SB_DIR}/sample/application.yml.sample ${SB_DIR}/config/application.yml
+if [ ! -s ${SB_DIR}/config/config.json ]; then
+  echo "检测到config配置目录下不存在config.json，从示例文件复制一份用于初始化...\n"
+  cp -fv ${SB_DIR}/sample/config.json.sample ${SB_DIR}/config/config.json
 fi
 
 echo "======================== 2. 启动gmc ========================\n"
-chmod +x ${SB_DIR}/gmc/Go-Mirai-Client
-nohup ${SB_DIR}/gmc/Go-Mirai-Client > /dev/null 2 >&1 &
+
+if [ 0"$IS_USE_BUILT_IN_GMC" = "0" ]; then
+  chmod +x ${SB_DIR}/gmc/Go-Mirai-Client
+  nohup ${SB_DIR}/gmc/Go-Mirai-Client > /dev/null 2 >&1 &
+else
 
 echo "======================== 3. 启动Server ========================\n"
-java -jar ${SB_DIR}/app.jar -Dspring.config.location=${SB_DIR}/config/application.yml
+java -jar ${SB_DIR}/app.jar
 
 exec "$@"

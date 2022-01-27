@@ -1,0 +1,9 @@
+{
+  "ltMonitorCron": "0/10 * * * * ?",
+  "robot": [
+    {
+      "name": "robot",
+      "qq": 18048600
+    }
+  ]
+}

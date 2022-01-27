@@ -53,7 +53,7 @@ public class ThreadPoolConfig {
      *
      * @return TaskScheduler
      */
-    @Bean
+    @Bean("defaultTaskScheduler")
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(10);

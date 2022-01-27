@@ -9,6 +9,7 @@ import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import cn.yiidii.pigeon.common.core.util.SpringContextHolder;
+import cn.yiidii.sb.common.constant.SbScheduleNameConstant;
 import cn.yiidii.sb.common.prop.SbSystemProperties;
 import cn.yiidii.sb.common.prop.SbSystemProperties.RobotConfig;
 import cn.yiidii.sb.model.bo.LtPhoneCache;
@@ -16,6 +17,7 @@ import cn.yiidii.sb.model.bo.QqCache;
 import cn.yiidii.sb.model.bo.RobotCache;
 import cn.yiidii.sb.model.cmd.LtCommand;
 import cn.yiidii.sb.model.dto.LtAccountInfo;
+import cn.yiidii.sb.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSONObject;
 import java.io.File;
 import java.math.BigDecimal;
@@ -35,8 +37,6 @@ import net.lz1998.pbbot.bot.Bot;
 import net.lz1998.pbbot.bot.BotContainer;
 import onebot.OnebotApi.GetFriendListResp;
 import onebot.OnebotApi.GetFriendListResp.Friend;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -60,6 +60,7 @@ public class RobotCacheService {
     private final ChinaUnicomService chinaUnicomService;
     private final BotContainer botContainer;
     private final SbSystemProperties systemProperties;
+    private final ScheduleTaskUtil scheduleTaskUtil;
 
     @PostConstruct
     public void init() {
@@ -234,22 +235,34 @@ public class RobotCacheService {
         return successPhones;
     }
 
-    @Async("scheduledExecutor")
-    @Scheduled(cron = "0/20 * * * * ?")
-    public void timerPersistCacheData() {
+    /**
+     * 启动定时任务
+     */
+    public void startTimerTask() {
+        scheduleTaskUtil.startCron(SbScheduleNameConstant.ROBOT_TIMER_MONITOR, () -> timerMonitor(), systemProperties.getLtMonitorCron());
+        scheduleTaskUtil.startCron(SbScheduleNameConstant.ROBOT_TIMER_PERSIST_CACHE_DATA, () -> timerPersistCacheData(), "0/20 * * * * ?");
+    }
+
+    /**
+     * 定时序列化数据
+     */
+    private void timerPersistCacheData() {
         if (!INIT) {
             return;
         }
+        Thread.currentThread().setName(String.format(Thread.currentThread().getName(), SbScheduleNameConstant.ROBOT_TIMER_PERSIST_CACHE_DATA));
         String prettyJa = JSONUtil.toJsonPrettyStr(DATA_CACHE);
         FileUtil.writeString(prettyJa, DATA_PATH, StandardCharsets.UTF_8);
     }
 
-    @Async("scheduledExecutor")
-    @Scheduled(cron = "${sb.config.monitor-cron:0 0/3 * * * ?}")
-    public void timerMonitor() {
+    /**
+     * 联通定时监控
+     */
+    private void timerMonitor() {
         if (!INIT) {
             return;
         }
+        Thread.currentThread().setName(String.format(Thread.currentThread().getName(), SbScheduleNameConstant.ROBOT_TIMER_MONITOR));
         ThreadPoolTaskExecutor executor = SpringContextHolder.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
         List<QqCache> qqCaches = DATA_CACHE.values().stream()
                 .map(robotCache -> robotCache.getQqCacheMap().values())

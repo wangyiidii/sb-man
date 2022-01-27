@@ -17,6 +17,7 @@
         <pigeon.common.version>1.0.0</pigeon.common.version>
         <pbbot-spring-boot-starter.version>0.0.31</pbbot-spring-boot-starter.version>
         <reflections.version>0.10.2</reflections.version>
+        <quartz.version>2.3.2</quartz.version>
     </properties>
     <dependencies>
         <dependency>
@@ -74,7 +75,11 @@
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>${quartz.version}</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
