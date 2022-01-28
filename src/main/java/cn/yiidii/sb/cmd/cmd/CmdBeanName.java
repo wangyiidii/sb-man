@@ -1,12 +1,12 @@
-package cn.yiidii.sb.model.cmd;
+package cn.yiidii.sb.cmd.cmd;
 
 /**
- * LtCmdBeanName
+ * 命令的BeanName常量
  *
  * @author ed w
  * @since 1.0
  */
-public interface LtCmdBeanName {
+public interface CmdBeanName {
 
     String LT_HELP = "lt_Help";
     String LT_SEND_SMS = "lt_sendSms";
@@ -19,5 +19,9 @@ public interface LtCmdBeanName {
     String LT_REMOVE_ALL_PHONE = "lt_removeAllPhone";
     String LT_FLOW_STATISTIC = "lt_flowStatistic";
     String LT_CAT_BOUND_PHONE = "lt_catBoundPhone";
+
+    String ZHISI_HELP = "zhisi_help";
+    String ZHISI_AI_BEGIN = "zhisi_aiBegin";
+    String ZHISI_AI_END = "zhisi_aiEnd";
 
 }

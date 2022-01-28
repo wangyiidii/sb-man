@@ -1,4 +1,4 @@
-package cn.yiidii.sb.cmdhandler;
+package cn.yiidii.sb.cmd.handler;
 
 import cn.yiidii.pigeon.common.core.base.R;
 import cn.yiidii.pigeon.common.strategy.handler.AbstractHandler;

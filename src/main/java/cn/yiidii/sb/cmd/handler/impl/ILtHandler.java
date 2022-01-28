@@ -1,4 +1,4 @@
-package cn.yiidii.sb.cmdhandler;
+package cn.yiidii.sb.cmd.handler.impl;
 
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.cache.impl.TimedCache;
@@ -11,9 +11,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.yiidii.pigeon.common.core.base.R;
 import cn.yiidii.pigeon.common.core.constant.StringPool;
 import cn.yiidii.pigeon.common.strategy.annotation.HandlerType;
+import cn.yiidii.sb.cmd.handler.ICmdHandler;
 import cn.yiidii.sb.model.bo.LtPhoneCache;
-import cn.yiidii.sb.model.cmd.LtCommand;
-import cn.yiidii.sb.model.cmd.LtCmdBeanName;
+import cn.yiidii.sb.cmd.cmd.impl.LtCommand;
+import cn.yiidii.sb.cmd.cmd.CmdBeanName;
 import cn.yiidii.sb.model.form.TelecomLoginForm;
 import cn.yiidii.sb.service.ChinaUnicomService;
 import cn.yiidii.sb.service.RobotCacheService;
@@ -45,8 +46,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
      * @author ed w
      * @since 1.0
      */
-    @Component(LtCmdBeanName.LT_HELP)
-    @HandlerType(bizCode = LtCmdBeanName.LT_HELP, beanName = LtCmdBeanName.LT_HELP)
+    @Component(CmdBeanName.LT_HELP)
+    @HandlerType(bizCode = CmdBeanName.LT_HELP, beanName = CmdBeanName.LT_HELP)
     class Help implements ILtHandler {
 
         @Override
@@ -65,9 +66,9 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
      * @author ed w
      * @since 1.0
      */
-    @Component(LtCmdBeanName.LT_SEND_SMS)
+    @Component(CmdBeanName.LT_SEND_SMS)
     @RequiredArgsConstructor
-    @HandlerType(bizCode = LtCmdBeanName.LT_SEND_SMS, beanName = LtCmdBeanName.LT_SEND_SMS)
+    @HandlerType(bizCode = CmdBeanName.LT_SEND_SMS, beanName = CmdBeanName.LT_SEND_SMS)
     class SendSms implements ILtHandler {
 
         private final ChinaUnicomService chinaUnicomService;
@@ -93,9 +94,9 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
      * @since 1.0
      */
     @Slf4j
-    @Component(LtCmdBeanName.LT_LOGIN)
+    @Component(CmdBeanName.LT_LOGIN)
     @RequiredArgsConstructor
-    @HandlerType(bizCode = LtCmdBeanName.LT_LOGIN, beanName = LtCmdBeanName.LT_LOGIN)
+    @HandlerType(bizCode = CmdBeanName.LT_LOGIN, beanName = CmdBeanName.LT_LOGIN)
     class Login implements ILtHandler {
 
         private final ChinaUnicomService chinaUnicomService;
@@ -138,9 +139,9 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
     }
 
     @Slf4j
-    @Component(LtCmdBeanName.LT_SET_THRESHOLD)
+    @Component(CmdBeanName.LT_SET_THRESHOLD)
     @RequiredArgsConstructor
-    @HandlerType(bizCode = LtCmdBeanName.LT_SET_THRESHOLD, beanName = LtCmdBeanName.LT_SET_THRESHOLD)
+    @HandlerType(bizCode = CmdBeanName.LT_SET_THRESHOLD, beanName = CmdBeanName.LT_SET_THRESHOLD)
     class SetThreshold implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -168,8 +169,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_START_MONITOR)
-    @HandlerType(bizCode = LtCmdBeanName.LT_START_MONITOR, beanName = LtCmdBeanName.LT_START_MONITOR)
+    @Component(CmdBeanName.LT_START_MONITOR)
+    @HandlerType(bizCode = CmdBeanName.LT_START_MONITOR, beanName = CmdBeanName.LT_START_MONITOR)
     class StartMonitor implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -189,8 +190,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_STOP_MONITOR)
-    @HandlerType(bizCode = LtCmdBeanName.LT_STOP_MONITOR, beanName = LtCmdBeanName.LT_STOP_MONITOR)
+    @Component(CmdBeanName.LT_STOP_MONITOR)
+    @HandlerType(bizCode = CmdBeanName.LT_STOP_MONITOR, beanName = CmdBeanName.LT_STOP_MONITOR)
     class StopMonitor implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -210,8 +211,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_FLOW_STATISTIC)
-    @HandlerType(bizCode = LtCmdBeanName.LT_FLOW_STATISTIC, beanName = LtCmdBeanName.LT_FLOW_STATISTIC)
+    @Component(CmdBeanName.LT_FLOW_STATISTIC)
+    @HandlerType(bizCode = CmdBeanName.LT_FLOW_STATISTIC, beanName = CmdBeanName.LT_FLOW_STATISTIC)
     class FlowStatistic implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -230,8 +231,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_RESET_OFFSET)
-    @HandlerType(bizCode = LtCmdBeanName.LT_RESET_OFFSET, beanName = LtCmdBeanName.LT_RESET_OFFSET)
+    @Component(CmdBeanName.LT_RESET_OFFSET)
+    @HandlerType(bizCode = CmdBeanName.LT_RESET_OFFSET, beanName = CmdBeanName.LT_RESET_OFFSET)
     class ResetOffset implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -251,8 +252,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_CAT_BOUND_PHONE)
-    @HandlerType(bizCode = LtCmdBeanName.LT_CAT_BOUND_PHONE, beanName = LtCmdBeanName.LT_CAT_BOUND_PHONE)
+    @Component(CmdBeanName.LT_CAT_BOUND_PHONE)
+    @HandlerType(bizCode = CmdBeanName.LT_CAT_BOUND_PHONE, beanName = CmdBeanName.LT_CAT_BOUND_PHONE)
     class CatBoundPhone implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -267,8 +268,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_UNBIND_PHONE)
-    @HandlerType(bizCode = LtCmdBeanName.LT_UNBIND_PHONE, beanName = LtCmdBeanName.LT_UNBIND_PHONE)
+    @Component(CmdBeanName.LT_UNBIND_PHONE)
+    @HandlerType(bizCode = CmdBeanName.LT_UNBIND_PHONE, beanName = CmdBeanName.LT_UNBIND_PHONE)
     class UnbindPhone implements ILtHandler {
 
         private final RobotCacheService robotCacheService;
@@ -292,8 +293,8 @@ public interface ILtHandler extends ICmdHandler<PrivateMessageEvent> {
 
     @Slf4j
     @RequiredArgsConstructor
-    @Component(LtCmdBeanName.LT_REMOVE_ALL_PHONE)
-    @HandlerType(bizCode = LtCmdBeanName.LT_REMOVE_ALL_PHONE, beanName = LtCmdBeanName.LT_REMOVE_ALL_PHONE)
+    @Component(CmdBeanName.LT_REMOVE_ALL_PHONE)
+    @HandlerType(bizCode = CmdBeanName.LT_REMOVE_ALL_PHONE, beanName = CmdBeanName.LT_REMOVE_ALL_PHONE)
     class UnbindAllPhone implements ILtHandler {
 
         private final RobotCacheService robotCacheService;

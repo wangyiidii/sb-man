@@ -2,7 +2,7 @@ spring:
   bot:
     # 配置插件列表（有序），如果插件返回0，继续执行剩余插件，如果插件返回1，终止剩余插件执行
     plugin-list:
-      - cn.yiidii.sb.plugin.LtReplyPlugin
+      - cn.yiidii.sb.plugin.PrivateMessageReplyPlugin
       - cn.yiidii.sb.plugin.FriendRequestEventPlugin
   application:
     name: sb

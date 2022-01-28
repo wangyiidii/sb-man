@@ -15,7 +15,7 @@ import cn.yiidii.sb.common.prop.SbSystemProperties.RobotConfig;
 import cn.yiidii.sb.model.bo.LtPhoneCache;
 import cn.yiidii.sb.model.bo.QqCache;
 import cn.yiidii.sb.model.bo.RobotCache;
-import cn.yiidii.sb.model.cmd.LtCommand;
+import cn.yiidii.sb.cmd.cmd.impl.LtCommand;
 import cn.yiidii.sb.model.dto.LtAccountInfo;
 import cn.yiidii.sb.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -269,7 +269,9 @@ public class RobotCacheService {
                 .flatMap(Collection::stream)
                 .filter(qq -> CollUtil.isNotEmpty(qq.getLtPhoneCache()))
                 .collect(Collectors.toList());
-        log.info("定时监控联通跳点, 本次监控{}个账户", qqCaches.size());
+        if (qqCaches.size() > 0) {
+            log.info("定时监控联通跳点, 本次监控{}个账户", qqCaches.size());
+        }
         qqCaches.forEach(qq -> executor.execute(() -> this.monitor(qq, false)));
     }
 
