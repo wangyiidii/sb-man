@@ -8,6 +8,7 @@ import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import cn.yiidii.pigeon.common.core.base.enumeration.Status;
 import cn.yiidii.pigeon.common.core.util.SpringContextHolder;
 import cn.yiidii.sb.common.constant.SbScheduleNameConstant;
 import cn.yiidii.sb.common.prop.SbSystemProperties;
@@ -186,8 +187,9 @@ public class RobotCacheService {
         if (Objects.isNull(ltPhoneCache)) {
             throw new RuntimeException(StrUtil.format("未绑定手机号{}", DesensitizedUtil.mobilePhone(phone)));
         }
-        String msg = StrUtil.format("手机：{}\r\n监控：{}\r\n阈值：{}MB\r\n合计：{}MB\r\n已用：{}MB\r\n已免：{}MB\r\n跳点：{}MB\r\n统计：{}\r\n刷新：{}",
+        String msg = StrUtil.format("手机：{}\r\nCookie：{}\r\n监控：{}\r\n阈值：{}MB\r\n合计：{}MB\r\n已用：{}MB\r\n已免：{}MB\r\n跳点：{}MB\r\n统计：{}\r\n刷新：{}",
                 DesensitizedUtil.mobilePhone(ltPhoneCache.getPhone()),
+                ltPhoneCache.getStatus().equals(Status.ENABLED) ? "有效" : "已失效",
                 ltPhoneCache.isMonitor() ? "已开启" : "未开启",
                 ltPhoneCache.getThreshold(),
                 ltPhoneCache.getSum(),
@@ -286,11 +288,17 @@ public class RobotCacheService {
         Long robotQq = qqCache.getRobotQq();
         Long friendQq = qqCache.getQq();
         qqCache.getLtPhoneCache().values().forEach(ltPhoneCache -> {
-            boolean canExecute = force || ltPhoneCache.isMonitor();
+            boolean canExecute = force || ltPhoneCache.isMonitor() || ltPhoneCache.getStatus().equals(Status.ENABLED);
             if (!canExecute) {
                 return;
             }
-            LtAccountInfo ltAccountInfo = chinaUnicomService.getAccountInfo(ltPhoneCache.getCookie());
+            LtAccountInfo ltAccountInfo;
+            try {
+                ltAccountInfo = chinaUnicomService.getAccountInfo(ltPhoneCache.getCookie());
+            } catch (Exception e) {
+                ltPhoneCache.setStatus(Status.DISABLED);
+                return;
+            }
             BigDecimal sum = ltAccountInfo.getSummary().getSum();
             BigDecimal free = ltAccountInfo.getSummary().getFreeFlow();
             BigDecimal use = sum.subtract(free);

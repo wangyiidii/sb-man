@@ -157,7 +157,16 @@ public class ChinaUnicomService {
                 .header(Header.COOKIE, cookie)
                 .body("externalSources=&contactCode=&serviceType=&saleChannel=&channelCode=&duanlianjieabc=&ticket=&ticketPhone=&ticketChannel=&userNumber=&language=")
                 .execute();
-        return BeanUtil.toBean(JSONObject.parseObject(response.body()), LtAccountInfo.class);
+        if (HttpStatus.HTTP_OK != response.getStatus()) {
+            throw new BizException("查询用户雨量信息失败");
+        }
+        JSONObject respJo;
+        try {
+            respJo = JSONObject.parseObject(response.body());
+        } catch (Exception e) {
+            throw new BizException("响应异常");
+        }
+        return BeanUtil.toBean(respJo, LtAccountInfo.class);
     }
 
 }

@@ -1,5 +1,6 @@
 package cn.yiidii.sb.model.bo;
 
+import cn.yiidii.pigeon.common.core.base.enumeration.Status;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class LtPhoneCache {
     private LocalDateTime statisticTime;
     private LocalDateTime lastMonitorTime;
     private LocalDateTime createTime;
+    private Status status = Status.ENABLED;
 
     public LtPhoneCache(String phone, String cookie) {
         this.phone = phone;
