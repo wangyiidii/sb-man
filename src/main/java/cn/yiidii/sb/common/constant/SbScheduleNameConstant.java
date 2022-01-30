@@ -10,6 +10,7 @@ public interface SbScheduleNameConstant {
 
     String ROBOT_TIMER_MONITOR = "robot-timerMonitor";
     String ROBOT_TIMER_PERSIST_CACHE_DATA = "robot-timerPersistCacheData";
+    String SYSTEM_CHECK_UPGRADE = "system-checkUpgrade";
 
 
 }

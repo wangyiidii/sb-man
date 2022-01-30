@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.yiidii</groupId>
     <artifactId>sb-man</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.3</version>
     <name>${project.artifactId}</name>
 
     <properties>
@@ -101,7 +101,7 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-        <finalName>${project.name}</finalName>
+        <finalName>${project.name}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

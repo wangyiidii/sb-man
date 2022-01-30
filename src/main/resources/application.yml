@@ -5,7 +5,8 @@ spring:
       - cn.yiidii.sb.plugin.PrivateMessageReplyPlugin
       - cn.yiidii.sb.plugin.FriendRequestEventPlugin
   application:
-    name: sb
+    name: @project.name@
+    version: @project.version@
 server:
   port: 8081
 

@@ -28,8 +28,25 @@ if [ ! -s ${SB_DIR}/config/config.json ]; then
   cp -fv ${SB_DIR}/sample/config.json.sample ${SB_DIR}/config/config.json
 fi
 
-echo "======================== 2. 启动gmc ========================\n"
-if $IS_USE_BUILT_IN_GMC AND [ $IS_USE_BUILT_IN_GMC="true"]; then
+echo "======================== 2. 检查更新软件 ========================\n"
+cd ${SB_DIR}
+if [ -f ./config/system.config ]; then
+  is_upgrade=`sed '/^upgrade=/!d;s/.*=//' ./config/system.config`
+  if [ $is_upgrade = "true" ]; then
+    url=`sed '/^url=/!d;s/.*=//' ./config/system.config`
+    version=`sed '/^version=/!d;s/.*=//' ./config/system.config`
+    url="https://ghproxy.com/"$url
+    echo "检测到可用更新, 版本号: ${version}, 下载链接: ${url}"
+    curl ${url} -o app.jar
+	echo "检测到可用更新"
+  else
+    echo "当前已是最新版本"
+  fi
+fi
+
+
+echo "======================== 3. 启动gmc ========================\n"
+if $IS_USE_BUILT_IN_GMC AND [ $IS_USE_BUILT_IN_GMC="true" ]; then
   echo "检测到使用内置的gmc\n"
   chmod +x ${SB_DIR}/gmc/Go-Mirai-Client
   nohup ${SB_DIR}/gmc/Go-Mirai-Client 2 >/dev/null >&1 &
@@ -37,7 +54,7 @@ else
   echo "检测到不使用内置的gmc\n"
 fi
 
-echo "======================== 3. 启动Server ========================\n"
+echo "======================== 4. 启动Server ========================\n"
 java -jar ${SB_DIR}/app.jar
 
 exec "$@"
