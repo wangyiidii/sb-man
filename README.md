@@ -6,15 +6,13 @@
 ----------
 **目录**
 
-[📢 说明](#-说明)
+[📢 说明](#说明)
 
-[✨ 功能](#-功能)
+[✨ 功能](#功能)
 
-[💻 本地启动](#-本地启动)
+[💻 本地启动](#本地启动)
 
-[🚀 docker部署](#-docker部署)
-- [😊 gmc](#-gmc)
-- [🐋 sb-man](#-sb-man)
+[🚀 docker部署](#docker部署)
 
 ----------
 ## 说明
@@ -45,7 +43,7 @@ springboot项目，配置`application.yml`后，启动`SbApplication.java`即可
         -v /data/sb/data:/sb/data \
         -v /data/sb/gmc:/sb/gmc \
         --name sb \
-        registry.cn-beijing.aliyuncs.com/yiidii-hub/sb-man:v1.0.1
+        registry.cn-beijing.aliyuncs.com/yiidii-hub/sb-man:v1.0.3
     ```
 2. 修改配置
     运行完成之后，先到`/data/sb/config/config.json`修改配置QQ
