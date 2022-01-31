@@ -10,18 +10,21 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import cn.yiidii.pigeon.common.core.base.enumeration.Status;
 import cn.yiidii.pigeon.common.core.util.SpringContextHolder;
+import cn.yiidii.sb.cmd.cmd.impl.LtCommand;
 import cn.yiidii.sb.common.constant.SbScheduleNameConstant;
 import cn.yiidii.sb.common.prop.SbSystemProperties;
 import cn.yiidii.sb.common.prop.SbSystemProperties.RobotConfig;
 import cn.yiidii.sb.model.bo.LtPhoneCache;
 import cn.yiidii.sb.model.bo.QqCache;
 import cn.yiidii.sb.model.bo.RobotCache;
-import cn.yiidii.sb.cmd.cmd.impl.LtCommand;
 import cn.yiidii.sb.model.dto.LtAccountInfo;
+import cn.yiidii.sb.model.dto.LtAccountInfo.Resource;
 import cn.yiidii.sb.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -55,6 +59,8 @@ public class RobotCacheService {
 
     private static final String DATA_PATH = System.getProperty("user.dir") + File.separator + "data" + File.separator + "data.json";
     private static final Map<Long, RobotCache> DATA_CACHE = new ConcurrentHashMap<>();
+    private static final List<String> FILTERED_LT_RESOURCE_TYPE = Lists.newArrayList("I2");
+    private static final BigDecimal NUM_1024 = new BigDecimal("1024");
 
     private static boolean INIT = false;
 
@@ -187,15 +193,16 @@ public class RobotCacheService {
         if (Objects.isNull(ltPhoneCache)) {
             throw new RuntimeException(StrUtil.format("未绑定手机号{}", DesensitizedUtil.mobilePhone(phone)));
         }
-        String msg = StrUtil.format("手机：{}\r\nCookie：{}\r\n监控：{}\r\n阈值：{}MB\r\n合计：{}MB\r\n已用：{}MB\r\n已免：{}MB\r\n跳点：{}MB\r\n统计：{}\r\n刷新：{}",
+        String msg = StrUtil.format("手机：{}\r\nCookie：{}\r\n监控：{}\r\n阈值：{}MB\r\n合计：{}\r\n全部已用：{}\r\n通用已用：{}\n免费流量：{}\r\n跳点：{}\r\n统计：{}\r\n刷新：{}",
                 DesensitizedUtil.mobilePhone(ltPhoneCache.getPhone()),
                 ltPhoneCache.getStatus().equals(Status.ENABLED) ? "有效" : "已失效",
                 ltPhoneCache.isMonitor() ? "已开启" : "未开启",
                 ltPhoneCache.getThreshold(),
-                ltPhoneCache.getSum(),
-                ltPhoneCache.getUse(),
-                ltPhoneCache.getFree(),
-                ltPhoneCache.getOffset(),
+                formatFlow(ltPhoneCache.getSum()),
+                formatFlow(ltPhoneCache.getUse()),
+                formatFlow(ltPhoneCache.getFilteredUse()),
+                formatFlow(ltPhoneCache.getFree()),
+                formatFlow(ltPhoneCache.getOffset()),
                 DateUtil.formatLocalDateTime(ltPhoneCache.getStatisticTime()),
                 DateUtil.formatLocalDateTime(ltPhoneCache.getLastMonitorTime())
         );
@@ -295,6 +302,7 @@ public class RobotCacheService {
             LtAccountInfo ltAccountInfo;
             try {
                 ltAccountInfo = chinaUnicomService.getAccountInfo(ltPhoneCache.getCookie());
+                ltPhoneCache.setStatus(Status.ENABLED);
             } catch (Exception e) {
                 ltPhoneCache.setStatus(Status.DISABLED);
                 return;
@@ -302,15 +310,27 @@ public class RobotCacheService {
             BigDecimal sum = ltAccountInfo.getSummary().getSum();
             BigDecimal free = ltAccountInfo.getSummary().getFreeFlow();
             BigDecimal use = sum.subtract(free);
+            Optional<Resource> flowOptional = ltAccountInfo.getResources().
+                    stream().filter(resource -> resource.getType().equals("flow"))
+                    .findFirst();
+            BigDecimal filteredUse = BigDecimal.ZERO;
+            if (flowOptional.isPresent()) {
+                filteredUse = flowOptional.get().getDetails().stream()
+                        .filter(d -> !CollUtil.contains(FILTERED_LT_RESOURCE_TYPE, d.getResourceType()))
+                        .map(d -> new BigDecimal(d.getUse()))
+                        .reduce(BigDecimal.ZERO, (x, y) -> x.add(y));
+            }
 
             // 默认-1的，如果超了，代表是第一次执行，不通知
             boolean firstTime = ltPhoneCache.getSum().compareTo(BigDecimal.ZERO) < 0;
             // 和上一次的差值
-            BigDecimal diff = use.subtract(ltPhoneCache.getUse());
+            BigDecimal diff = filteredUse.subtract(ltPhoneCache.getFilteredUse());
+
             // 先保存
             ltPhoneCache.setSum(sum);
             ltPhoneCache.setFree(free);
             ltPhoneCache.setUse(use);
+            ltPhoneCache.setFilteredUse(filteredUse);
             if (!firstTime) {
                 // 不是第一次才进行累加
                 ltPhoneCache.setOffset(ltPhoneCache.getOffset().add(diff));
@@ -330,5 +350,25 @@ public class RobotCacheService {
 
             }
         });
+    }
+
+    /**
+     * 格式化流量
+     *
+     * @param num 传入问联通的MB
+     * @return
+     */
+    private String formatFlow(BigDecimal num) {
+        if (num.subtract(NUM_1024).compareTo(BigDecimal.ZERO) > 0) {
+            num = num.divide(NUM_1024, 2, RoundingMode.HALF_UP);
+            if (num.subtract(NUM_1024).compareTo(BigDecimal.ZERO) > 0) {
+                num = num.divide(NUM_1024, 2, RoundingMode.HALF_UP);
+                return num + "TB";
+            } else {
+                return num + "GB";
+            }
+        } else {
+            return num + "MB";
+        }
     }
 }

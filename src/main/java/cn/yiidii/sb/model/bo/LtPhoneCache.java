@@ -24,6 +24,7 @@ public class LtPhoneCache {
 
     private BigDecimal sum;
     private BigDecimal use;
+    private BigDecimal filteredUse;
     private BigDecimal free;
     private BigDecimal offset;
 
@@ -41,6 +42,7 @@ public class LtPhoneCache {
 
         this.sum = new BigDecimal("-1");
         this.use = new BigDecimal("-1");
+        this.filteredUse = new BigDecimal("-1");
         this.free = new BigDecimal("-1");
         this.offset = BigDecimal.ZERO;
 

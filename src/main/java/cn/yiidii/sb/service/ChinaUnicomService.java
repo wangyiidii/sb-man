@@ -87,7 +87,7 @@ public class ChinaUnicomService {
         String password = telecomLoginForm.getPassword();
         String userContent = telecomLoginForm.getUserContent();
         String imageId = telecomLoginForm.getImageId();
-        String imei = "7865969553f94e9c9fe6654e89cbefc0";
+        String imei = RandomUtil.randomString(32);
         int randomSixCode = (int) ((Math.random() * 9 + 1) * 100000);
         String encryptMobile;
         String encryptPwd;
@@ -114,7 +114,7 @@ public class ChinaUnicomService {
         params.put("keyVersion", "");
         params.put("pip", IpUtil.getRandomIp());
         params.put("voice_code", "");
-        params.put("appId", "ChinaunicomMobileBusiness");
+        params.put("appId", RandomUtil.randomString(32));
         params.put("voiceoff_flag", "");
         params.put("deviceModel", "OnePlus");
         params.put("deviceBrand", "ONEPLUS A6000");
@@ -158,7 +158,7 @@ public class ChinaUnicomService {
                 .body("externalSources=&contactCode=&serviceType=&saleChannel=&channelCode=&duanlianjieabc=&ticket=&ticketPhone=&ticketChannel=&userNumber=&language=")
                 .execute();
         if (HttpStatus.HTTP_OK != response.getStatus()) {
-            throw new BizException("查询用户雨量信息失败");
+            throw new BizException("查询用户余量信息失败");
         }
         JSONObject respJo;
         try {

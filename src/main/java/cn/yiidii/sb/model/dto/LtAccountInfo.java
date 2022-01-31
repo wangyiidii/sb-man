@@ -60,6 +60,7 @@ public class LtAccountInfo {
         private String use;
         private String remain;
         private String usedPercent;
+        private String resourceType;
 
     }
 
