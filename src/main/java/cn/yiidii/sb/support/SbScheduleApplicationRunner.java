@@ -30,7 +30,7 @@ public class SbScheduleApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         log.info(">>>>>>>>>>>>>>>>>>>> 启动系统定时任务开始");
         robotCacheService.startTimerTask();
-        scheduleTaskUtil.startCron(SbScheduleNameConstant.SYSTEM_CHECK_UPGRADE, () -> systemConfigService.timerCheckIfNeedUpdated(), "0/3 * * * * ?");
+        scheduleTaskUtil.startCron(SbScheduleNameConstant.SYSTEM_CHECK_UPGRADE, () -> systemConfigService.timerCheckIfNeedUpdated(), "0 0/10 * * * ?");
         log.info(">>>>>>>>>>>>>>>>>>>> 定时任系统务启动完成");
     }
 }
