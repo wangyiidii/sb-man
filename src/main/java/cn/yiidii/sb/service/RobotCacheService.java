@@ -7,8 +7,11 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONUtil;
 import cn.yiidii.pigeon.common.core.base.enumeration.Status;
+import cn.yiidii.pigeon.common.core.exception.BizException;
 import cn.yiidii.pigeon.common.core.util.SpringContextHolder;
 import cn.yiidii.sb.cmd.cmd.impl.LtCommand;
 import cn.yiidii.sb.common.constant.SbScheduleNameConstant;
@@ -17,25 +20,11 @@ import cn.yiidii.sb.common.prop.SbSystemProperties.RobotConfig;
 import cn.yiidii.sb.model.bo.LtPhoneCache;
 import cn.yiidii.sb.model.bo.QqCache;
 import cn.yiidii.sb.model.bo.RobotCache;
-import cn.yiidii.sb.model.dto.LtAccountInfo;
-import cn.yiidii.sb.model.dto.LtAccountInfo.Resource;
+import cn.yiidii.sb.model.dto.LtUsageDiffResponseDTO;
 import cn.yiidii.sb.util.ScheduleTaskUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.lz1998.pbbot.bot.Bot;
@@ -45,6 +34,16 @@ import onebot.OnebotApi.GetFriendListResp.Friend;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * SingleQqCache service
@@ -64,7 +63,6 @@ public class RobotCacheService {
 
     private static boolean INIT = false;
 
-    private final ChinaUnicomService chinaUnicomService;
     private final BotContainer botContainer;
     private final SbSystemProperties systemProperties;
     private final ScheduleTaskUtil scheduleTaskUtil;
@@ -193,16 +191,26 @@ public class RobotCacheService {
         if (Objects.isNull(ltPhoneCache)) {
             throw new RuntimeException(StrUtil.format("未绑定手机号{}", DesensitizedUtil.mobilePhone(phone)));
         }
-        String msg = StrUtil.format("手机：{}\r\nCookie：{}\r\n监控：{}\r\n阈值：{}MB\r\n合计：{}\r\n全部已用：{}\r\n通用已用：{}\n免费流量：{}\r\n跳点：{}\r\n统计：{}\r\n刷新：{}",
+        String msg = StrUtil.format("手机：{}\r\n" +
+                        "Cookie：{}\r\n" +
+                        "监控：{}\r\n" +
+                        "阈值：{}MB\r\n" +
+                        "合计：{}\r\n" +
+                        "通用：{}\r\n" +
+                        "定向：{}\r\n" +
+                        "免费：{}\r\n" +
+                        "跳点：{}\r\n" +
+                        "统计：{}\r\n" +
+                        "刷新：{}",
                 DesensitizedUtil.mobilePhone(ltPhoneCache.getPhone()),
                 ltPhoneCache.getStatus().equals(Status.ENABLED) ? "有效" : "已失效",
                 ltPhoneCache.isMonitor() ? "已开启" : "未开启",
                 ltPhoneCache.getThreshold(),
                 formatFlow(ltPhoneCache.getSum()),
-                formatFlow(ltPhoneCache.getUse()),
-                formatFlow(ltPhoneCache.getFilteredUse()),
+                formatFlow(ltPhoneCache.getGeneric()),
+                formatFlow(ltPhoneCache.getDirection()),
                 formatFlow(ltPhoneCache.getFree()),
-                formatFlow(ltPhoneCache.getOffset()),
+                formatFlow(ltPhoneCache.getDiff()),
                 DateUtil.formatLocalDateTime(ltPhoneCache.getStatisticTime()),
                 DateUtil.formatLocalDateTime(ltPhoneCache.getLastMonitorTime())
         );
@@ -215,7 +223,8 @@ public class RobotCacheService {
         if (Objects.isNull(ltPhoneCache)) {
             throw new RuntimeException(StrUtil.format("未绑定手机号{}", DesensitizedUtil.mobilePhone(phone)));
         }
-        ltPhoneCache.setOffset(BigDecimal.ZERO);
+        ltPhoneCache.setDiff(BigDecimal.ZERO);
+        this.getLtDiff(ltPhoneCache.getCookie(), true);
     }
 
 
@@ -250,6 +259,29 @@ public class RobotCacheService {
     public void startTimerTask() {
         scheduleTaskUtil.startCron(SbScheduleNameConstant.ROBOT_TIMER_MONITOR, () -> timerMonitor(), systemProperties.getLtMonitorCron());
         scheduleTaskUtil.startCron(SbScheduleNameConstant.ROBOT_TIMER_PERSIST_CACHE_DATA, () -> timerPersistCacheData(), "0/20 * * * * ?");
+    }
+
+    public LtUsageDiffResponseDTO getLtDiff(String cookie, boolean reset) {
+        JSONObject body = new JSONObject();
+        body.put("cookie", cookie);
+        body.put("reset", reset);
+        HttpResponse response = HttpRequest.post("http://lab-v2.yiidii.cn/api/lt/diff")
+                .body(JSON.toJSONString(body))
+                .execute();
+
+        LtUsageDiffResponseDTO diffResponseDTO;
+        try {
+            diffResponseDTO = JSON.parseObject(response.body(), LtUsageDiffResponseDTO.class);
+            log.debug("lt diff resp: {}", JSON.toJSONString(diffResponseDTO));
+            Integer code = diffResponseDTO.getCode();
+            if (code != 0) {
+                throw new BizException(diffResponseDTO.getMsg());
+            }
+            return diffResponseDTO;
+        } catch (Exception e) {
+            throw e;
+        }
+
     }
 
     /**
@@ -299,56 +331,37 @@ public class RobotCacheService {
             if (!canExecute) {
                 return;
             }
-            LtAccountInfo ltAccountInfo;
+
+            LtUsageDiffResponseDTO diffResponseDTO;
             try {
-                ltAccountInfo = chinaUnicomService.getAccountInfo(ltPhoneCache.getCookie());
-                ltPhoneCache.setStatus(Status.ENABLED);
+                diffResponseDTO = this.getLtDiff(ltPhoneCache.getCookie(), false);
             } catch (Exception e) {
+                log.error("getLtDiff ex: {}", e.getMessage());
                 ltPhoneCache.setStatus(Status.DISABLED);
                 return;
             }
-            BigDecimal sum = ltAccountInfo.getSummary().getSum();
-            BigDecimal free = ltAccountInfo.getSummary().getFreeFlow();
-            BigDecimal use = sum.subtract(free);
-            Optional<Resource> flowOptional = ltAccountInfo.getResources().
-                    stream().filter(resource -> resource.getType().equals("flow"))
-                    .findFirst();
-            BigDecimal filteredUse = BigDecimal.ZERO;
-            if (flowOptional.isPresent()) {
-                filteredUse = flowOptional.get().getDetails().stream()
-                        .filter(d -> !CollUtil.contains(FILTERED_LT_RESOURCE_TYPE, d.getResourceType()))
-                        .map(d -> new BigDecimal(d.getUse()))
-                        .reduce(BigDecimal.ZERO, (x, y) -> x.add(y));
-            }
-
-            // 默认-1的，如果超了，代表是第一次执行，不通知
-            boolean firstTime = ltPhoneCache.getSum().compareTo(BigDecimal.ZERO) < 0;
-            // 和上一次的差值
-            BigDecimal diff = filteredUse.subtract(ltPhoneCache.getFilteredUse());
 
             // 先保存
-            ltPhoneCache.setSum(sum);
-            ltPhoneCache.setFree(free);
-            ltPhoneCache.setUse(use);
-            ltPhoneCache.setFilteredUse(filteredUse);
-            if (!firstTime) {
-                // 不是第一次才进行累加
-                ltPhoneCache.setOffset(ltPhoneCache.getOffset().add(diff));
-            }
+            LtUsageDiffResponseDTO.LtUsageDiff diffData = diffResponseDTO.getData();
+            ltPhoneCache.setSum(diffData.getSum());
+            ltPhoneCache.setGeneric(diffData.getPkg().getGeneric());
+            ltPhoneCache.setDirection(diffData.getPkg().getDirection());
+            ltPhoneCache.setFree(diffData.getFree());
+            ltPhoneCache.setDiff(diffData.getDiff());
             ltPhoneCache.setLastMonitorTime(LocalDateTime.now());
-            ltPhoneCache.setStatisticTime(DateUtil.parseLocalDateTime(ltAccountInfo.getTime()));
-            boolean over = ltPhoneCache.getOffset().subtract(new BigDecimal(ltPhoneCache.getThreshold())).compareTo(BigDecimal.ZERO) > 0;
-            // 通知
-            if (over && !firstTime) {
+            ltPhoneCache.setStatisticTime(diffData.getLastTime());
+            if (diffData.getDiff().compareTo(BigDecimal.ZERO) > 0) {
                 // 流量统计描述
                 String flowStatistic = this.getFlowStatistic(robotQq, friendQq, ltPhoneCache.getPhone());
                 flowStatistic = "❗❗❗跳点告警❗❗❗\r\n".concat(flowStatistic).concat(StrUtil.format("\r\n\r\n\r\n请先发送【{}】重置跳点, 否则该信息将会一直提醒!", LtCommand.RESET_OFFSET.getDisplayName()));
                 // 发送消息
                 this.sendPrivateMessage(robotQq, friendQq, flowStatistic);
                 // 日志
-                log.info(StrUtil.format("robotId, {}, QQ: {}, 手机号: {}, 存在跳点({}M/{}M), 已私聊告警", robotQq, friendQq, ltPhoneCache.getPhone(), ltPhoneCache.getOffset(), ltPhoneCache.getThreshold()));
+                log.info(StrUtil.format("robotId, {}, QQ: {}, 手机号: {}, 存在跳点({}M/{}M), 已私聊告警",
+                        robotQq, friendQq, ltPhoneCache.getPhone(), ltPhoneCache.getDiff(), ltPhoneCache.getThreshold()));
 
             }
+
         });
     }
 

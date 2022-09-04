@@ -23,10 +23,10 @@ public class LtPhoneCache {
     private Long threshold;
 
     private BigDecimal sum;
-    private BigDecimal use;
-    private BigDecimal filteredUse;
+    private BigDecimal generic;
+    private BigDecimal direction;
     private BigDecimal free;
-    private BigDecimal offset;
+    private BigDecimal diff;
 
     private LocalDateTime statisticTime;
     private LocalDateTime lastMonitorTime;
@@ -41,10 +41,10 @@ public class LtPhoneCache {
         this.threshold = 10L;
 
         this.sum = new BigDecimal("-1");
-        this.use = new BigDecimal("-1");
-        this.filteredUse = new BigDecimal("-1");
+        this.generic = new BigDecimal("-1");
+        this.direction = new BigDecimal("-1");
         this.free = new BigDecimal("-1");
-        this.offset = BigDecimal.ZERO;
+        this.diff = BigDecimal.ZERO;
 
         this.statisticTime = LocalDateTime.now();
         this.lastMonitorTime = LocalDateTime.now();

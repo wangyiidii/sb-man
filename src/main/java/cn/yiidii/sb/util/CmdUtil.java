@@ -31,7 +31,7 @@ public class CmdUtil {
     private static final List<ICommand> CMD_CACHE = Lists.newArrayList();
 
     static {
-        Reflections reflections = new Reflections();
+        Reflections reflections = new Reflections("cn.yiidii");
         reflections.getSubTypesOf(ICommand.class).stream().distinct().forEach(e -> {
             try {
                 Arrays.stream(e.getEnumConstants()).forEach(CMD_CACHE::add);
